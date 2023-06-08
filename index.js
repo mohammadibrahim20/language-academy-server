@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
@@ -38,11 +38,36 @@ async function run() {
       res.send({ token });
     });
 
+    // get all class list
+    app.get("/all-class/", async (req, res) => {
+      const result = await classesCollection.find().toArray();
+      res.send(result);
+    });
+
     // get instructor class
     app.get("/my-class/:email", async (req, res) => {
       const email = req.params.email;
       const query = { instructor_email: email };
       const result = await classesCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // get instructor class updates
+    app.put("/update-class/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const body = req.body;
+      console.log(body);
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedDoc = {
+        $set: body,
+      };
+      const result = await classesCollection.updateOne(
+        query,
+        updatedDoc,
+        options
+      );
       res.send(result);
     });
 
@@ -59,7 +84,7 @@ async function run() {
     });
 
     // user collection
-    app.put("/users/:email", async (req, res) => {
+    app.patch("/users/:email", async (req, res) => {
       const email = req.params.email;
       const userInformation = req.body;
       const query = { email: email };
@@ -71,12 +96,16 @@ async function run() {
       res.send(result);
     });
 
-    // get user
+    // get single user for role
     app.get("/user/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const result = await usersCollection.findOne(query);
-      console.log(result);
+      res.send(result);
+    });
+
+    app.get("/users", async (req, res) => {
+      const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
