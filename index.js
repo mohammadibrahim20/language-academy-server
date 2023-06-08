@@ -38,10 +38,23 @@ async function run() {
       res.send({ token });
     });
 
+    // get instructor class
+    app.get("/my-class/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { instructor_email: email };
+      const result = await classesCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // upload class
     app.post("/add-class", async (req, res) => {
       const doc = req.body;
       const result = await classesCollection.insertOne(doc);
+      res.send(result);
+    });
+    // get all classes
+    app.get("/all-class", async (req, res) => {
+      const result = await classesCollection.find().toArray();
       res.send(result);
     });
 
