@@ -24,6 +24,9 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     const usersCollection = client.db("languageAcademyDB").collection("users");
+    const classesCollection = client
+      .db("languageAcademyDB")
+      .collection("classes");
     // jwt token create
     app.post("/jwt", (req, res) => {
       const email = req.body;
@@ -35,6 +38,13 @@ async function run() {
       res.send({ token });
     });
 
+    // upload class
+    app.post("/add-class", async (req, res) => {
+      const doc = req.body;
+      const result = await classesCollection.insertOne(doc);
+      res.send(result);
+    });
+
     // user collection
     app.put("/users/:email", async (req, res) => {
       const email = req.params.email;
@@ -42,9 +52,18 @@ async function run() {
       const query = { email: email };
       const options = { upsert: true };
       const updateDoc = {
-        $set: user,
+        $set: userInformation,
       };
       const result = await usersCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    });
+
+    // get user
+    app.get("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await usersCollection.findOne(query);
+      console.log(result);
       res.send(result);
     });
 
