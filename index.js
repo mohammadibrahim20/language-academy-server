@@ -24,6 +24,9 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     const usersCollection = client.db("languageAcademyDB").collection("users");
+    const bookingsCollection = client
+      .db("languageAcademyDB")
+      .collection("bookings");
     const classesCollection = client
       .db("languageAcademyDB")
       .collection("classes");
@@ -36,6 +39,19 @@ async function run() {
       });
       // console.log(token);
       res.send({ token });
+    });
+
+    // add class bookmark
+    app.post("/book-class", async (req, res) => {
+      const doc = req.body;
+      const result = await bookingsCollection.insertOne(doc);
+      res.send(result);
+    });
+    // get all class bookmark
+    app.post("/book-class/:email", async (req, res) => {
+      const doc = req.body;
+      const result = await bookingsCollection.insertOne(doc);
+      res.send(result);
     });
 
     // get all class list
@@ -83,7 +99,7 @@ async function run() {
       res.send(result);
     });
 
-    // user collection
+    // user collection updates and add
     app.patch("/users/:email", async (req, res) => {
       const email = req.params.email;
       const userInformation = req.body;
@@ -104,8 +120,16 @@ async function run() {
       res.send(result);
     });
 
+    // get all users collection
     app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+    // get instructor collection
+
+    app.get("/instructors", async (req, res) => {
+      const query = { role: "instructor" };
+      const result = await usersCollection.find(query).toArray();
       res.send(result);
     });
 
