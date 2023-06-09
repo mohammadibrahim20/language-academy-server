@@ -64,6 +64,15 @@ async function run() {
       const result = await bookingsCollection.insertOne(doc);
       res.send(result);
     });
+    // delete class to  bookmark
+    app.delete("/delete-book/:id", async (req, res) => {
+      const query = { _id: new ObjectId(req.params.id) };
+      console.log(query);
+      const result = await bookingsCollection.deleteOne(query);
+      console.log(result)
+      res.send(result);
+    });
+
     // get all class bookmark
     app.get("/book-class/:email", async (req, res) => {
       const query = { instructor_email: req.params.email };
