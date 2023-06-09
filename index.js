@@ -49,8 +49,8 @@ async function run() {
     });
     // get all class bookmark
     app.post("/book-class/:email", async (req, res) => {
-      const doc = req.body;
-      const result = await bookingsCollection.insertOne(doc);
+      const query = { email: req.params.email };
+      const result = await bookingsCollection.find(query).toArray();
       res.send(result);
     });
 
