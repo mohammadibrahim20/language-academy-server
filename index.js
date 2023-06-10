@@ -3,8 +3,11 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const { default: Stripe } = require("stripe");
 const app = express();
 const port = process.env.PORT || 5000;
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
+
 
 app.use(cors());
 app.use(express.json());
@@ -52,11 +55,54 @@ async function run() {
       const email = req.body;
       // console.log(email);
       const token = jwt.sign(email, process.env.JSON_ACCESS_TOKEN, {
-        expiresIn: "1h",
+        expiresIn: "7d",
       });
       // console.log(token);
       res.send({ token });
     });
+
+    // strype payment
+/*     app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      console.log(price)
+      const amount = parseFloat(price) * 100;
+      if (!price) return;
+      const paymentIntent = stripe.paymentIntent.create({
+        amount: amount,
+        currency: "USD",
+        payment_method_type: ["card"],
+      });
+      res.send({
+        clientSecret: paymentIntent.clientSecret,
+      });
+    }); */
+
+    app.post('/create-payment-intent', async (req, res) => {
+      const { price } = req.body
+      const amount = parseFloat(price * 100)
+      console.log(price)
+      if (!price) return
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card'],
+      })
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      })
+    })
+
+    // stripe booking success api
+
+    // Get bookings for guest
+    app.post('/bookings', async (req, res) => {
+      const booking = req.body
+      const result = await bookingsCollection.insertOne(booking)
+      
+      console.log(result)
+      res.send(result)
+    })
 
     // add class bookmark
     app.post("/book-class", async (req, res) => {
@@ -67,13 +113,17 @@ async function run() {
     // delete class to  bookmark
     app.delete("/delete-book/:id", async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
-      console.log(query);
       const result = await bookingsCollection.deleteOne(query);
-      console.log(result)
       res.send(result);
     });
 
-    // get all class bookmark
+    // get all class bookmark for students
+    app.get("/my-class/:email", async (req, res) => {
+      const query = { student_Email: req.params.email };
+      const result = await bookingsCollection.find(query).toArray();
+      res.send(result);
+    });
+    // get all class bookmark for insturctor
     app.get("/book-class/:email", async (req, res) => {
       const query = { instructor_email: req.params.email };
       const result = await bookingsCollection.find(query).toArray();
@@ -97,9 +147,7 @@ async function run() {
     // get instructor class updates
     app.put("/update-class/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
       const body = req.body;
-      console.log(body);
       const query = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updatedDoc = {
