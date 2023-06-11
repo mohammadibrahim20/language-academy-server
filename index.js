@@ -159,19 +159,12 @@ async function run() {
     // update class enrollded count
     app.put("/enrolled/:id", async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
-
-      const doc = await classesCollection.findOne(query);
-      let seat_capacity = doc.seat_capacity;
-      let enrolled = doc.enrolled;
-      if (seat_capacity > 1) {
-        return res.send({ error: true, seat_capacity: "full" });
-      }
-      enrolled += 1;
-      seat_capacity -= 1;
+      const seat_capacity = req.body.seat_capacity - 1;
+      const enrolled = req.body.enrolled + 1;
       const updateDoc = {
         $set: {
-          enrolled: enrolled,
-          seat_capacity: seat_capacity,
+          enrolled,
+          seat_capacity,
         },
       };
       const options = { upsert: true };
@@ -180,7 +173,6 @@ async function run() {
         updateDoc,
         options
       );
-      console.log(result)
       res.send(result);
     });
 
@@ -255,7 +247,7 @@ async function run() {
       res.send(result);
     });
 
-    // Send a ping to confirm a successful connection
+    // Send a ping to confirm a successful connectionn
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
