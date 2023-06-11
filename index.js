@@ -60,22 +60,6 @@ async function run() {
       res.send({ token });
     });
 
-    // strype payment
-    /*     app.post("/create-payment-intent", async (req, res) => {
-      const { price } = req.body;
-      console.log(price)
-      const amount = parseFloat(price) * 100;
-      if (!price) return;
-      const paymentIntent = stripe.paymentIntent.create({
-        amount: amount,
-        currency: "USD",
-        payment_method_type: ["card"],
-      });
-      res.send({
-        clientSecret: paymentIntent.clientSecret,
-      });
-    }); */
-
     app.post("/create-payment-intent", async (req, res) => {
       const { price } = req.body;
       const amount = parseFloat(price * 100);
@@ -151,7 +135,7 @@ async function run() {
     });
 
     // get all class list
-    app.get("/all-class/", async (req, res) => {
+    app.get("/all-class", async (req, res) => {
       const result = await classesCollection.find().toArray();
       res.send(result);
     });
@@ -173,6 +157,16 @@ async function run() {
         updateDoc,
         options
       );
+      res.send(result);
+    });
+
+    // popular class get for homepage
+    app.get("/popular-class", async (req, res) => {
+      const result = await classesCollection
+        .find({ status: "approved" })
+        .sort({ enrolled: -1 })
+        .limit(6)
+        .toArray();
       res.send(result);
     });
 
@@ -209,7 +203,9 @@ async function run() {
     });
     // get all classes
     app.get("/all-class", async (req, res) => {
-      const result = await classesCollection.find().toArray();
+      const result = await classesCollection
+        .find({ status: "approved" })
+        .toArray();
       res.send(result);
     });
 
@@ -217,8 +213,10 @@ async function run() {
     app.patch("/users/:email", async (req, res) => {
       const email = req.params.email;
       const userInformation = req.body;
+
       const query = { email: email };
       const options = { upsert: true };
+     
       const updateDoc = {
         $set: userInformation,
       };
